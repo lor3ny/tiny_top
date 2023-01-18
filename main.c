@@ -8,11 +8,17 @@
 #include <ctype.h>
 
 
-
 int process_monitor(){
 DIR *dp;
     struct dirent *ep;     
     dp = opendir ("/proc");
+    float uptime;
+
+    char* buf = malloc(sizeof(char)*1000);
+    sprintf(buf, "/proc/%s", "uptime");
+    FILE* fd_uptime = fopen(buf, "r");
+    fscanf(fd_uptime, "%f", &uptime);
+    fclose(fd_uptime);
     
     if (dp != NULL) {
         while ((ep = readdir (dp)) != NULL) {
@@ -41,6 +47,9 @@ DIR *dp;
             float ultime_cpu_value;
             float starttime_cpu_value;
 
+            float clock = sysconf(_SC_CLK_TCK);
+            int page_size = sysconf(_SC_PAGESIZE)/1000;
+
             while(stat_value != NULL) {
 
 
@@ -59,8 +68,11 @@ DIR *dp;
                 stat_value = strtok(NULL, " ");
             }
 
-            float cpu_usage = (stime_cpu_value + ultime_cpu_value)/starttime_cpu_value;
-            printf("CPU USAGE: %.6f\n", cpu_usage);
+            starttime_cpu_value = starttime_cpu_value/clock;
+
+
+            float cpu_usage = (((stime_cpu_value + ultime_cpu_value)*100)/clock)/(uptime-starttime_cpu_value);
+            printf("CPU USAGE: %.20f\n", cpu_usage);
 
 
             stat_proc = NULL;
