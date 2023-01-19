@@ -7,6 +7,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <regex.h>
+#include <sys/poll.h>
+#include <sys/select.h>
 
 
 
@@ -66,6 +68,7 @@ void readfile(const char* file_path,char* buf){
 
     fclose(fd);
 }
+
 
 
 void setup_process(char* stats, process* proc, sysinfo* sinfo){
@@ -182,43 +185,52 @@ int process_monitor(){
     sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
     get_sysinfo(sinfo);
     
-    if (procDIR != NULL) {
-        while (( processes_list = readdir (procDIR)) != NULL) {
 
-            if(!isdigit(processes_list->d_name[0]))
-                continue;
+    if(procDIR == NULL){
+        perror("Couldn't open the directory");
+        return -1;
+    }
+
+    
+
+    while (( processes_list = readdir (procDIR)) != NULL) {
+
+        if(isdigit(processes_list->d_name[0])) {
 
             char stat_address_buf[512]; 
             sprintf(stat_address_buf, "/proc/%s/stat", processes_list->d_name);
 
-            process* proc = (process*) malloc(sizeof(process));
-
             char stats_content_buf[512];
             readfile(stat_address_buf, stats_content_buf);
 
-            setup_process(stats_content_buf, proc, sinfo);   
+            process* proc = (process*) malloc(sizeof(process));  
 
-            printf("%d   %c   %0.4f   %0.4f   %s\n", proc->pid, proc->state, proc->cpu_usage, proc->mem_usage, proc->name);
+            setup_process(stats_content_buf, proc, sinfo); 
+            
+            printf("%d   %c   %0.4f   %0.4f   %s\n", proc->pid, proc->state, proc->cpu_usage, proc->mem_usage, proc->name);   
 
-        }     
+        }
+    } 
 
-        closedir(procDIR);
-        return 0;
+    closedir(procDIR);
 
-    } else {
-        perror("Couldn't open the directory");
-        return -1;
-    }
+    return 0;
 }
+
+
+
 
 
 
 int main(){
 
-    while (1)
-    {
+    while(1){
         system("clear");
+
+        printf("       PID          STATE         CPU             MEM             COMMAND\n");
+
         process_monitor();
+
         sleep(1);
     }
 }
