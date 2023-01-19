@@ -14,10 +14,7 @@ typedef struct {
 
     int pid;
     char* name;
-    float stime_cpu;
-    float utime_cpu;
-    float starttime_cpu;
-
+    char state;
     float cpu_usage;
     float mem_usage;
 
@@ -42,7 +39,6 @@ float compute_cpu_usage(float stime, float ultime, float uptime, float starttime
 
     float total_usage = (stime + ultime)* 100;
     float elapsed_time = uptime - (starttime/clock);
-
     float cpu_usage = (total_usage/clock)/elapsed_time;
 
 }
@@ -70,84 +66,83 @@ void readfile(const char* file_path,char* buf){
     fclose(fd);
 }
 
-int count_spaces(char* str){
-    int index_name = 0;
-    char* tok_name = strtok(str, " ");
-
-
-    while (tok_name != NULL){
-
-        index_name++;            
-        tok_name = strtok(NULL, " ");
-    }
-
-    return index_name;
-}
 
 void setup_process(char* stats){
-
-    char buf[100];
-    int index_name = 0;
-    char* tok_name = strtok(stats, "(");
-
-
-    while (tok_name != NULL){
-
-        if(index_name == 1)
-            sprintf(buf, "%s" ,tok_name);
-
-        index_name++;            
-        tok_name = strtok(NULL, "(");
-    }
-    printf("%s\n", buf);
-    
-
-    /*
-
-
-    int stat_index = 0;
-    char* tok = strtok(stats, " ");
 
     printf("------------- new process ------------- \n");
 
     process* proc = (process*) malloc(sizeof(process));
 
+    int index_name = 0;
+    char* tok_name = strtok(stats, "(");
+    char polished_stats[1000];
+
+    long unsigned int stime_cpu;
+    long unsigned int utime_cpu;
+    long unsigned int starttime_cpu;
+
+
+    while (tok_name != NULL){
+
+        if(index_name == 0){
+            printf("%s\n", tok_name);
+            proc->pid = atoi(tok_name);
+        }
+
+
+        if(index_name == 1) {
+            int index_name2 = 0;
+            char* tok_name2 = strtok(tok_name, ")");
+
+            while (tok_name2 != NULL){
+
+                if(index_name2 == 0) {
+                    printf("%s\n", tok_name2);
+                    proc->name = tok_name2;
+                }
+
+                if(index_name2 == 1) {
+                    sprintf(polished_stats ,"%s", tok_name2);
+                }
+
+                index_name2++;            
+                tok_name2 = strtok(NULL, ")");
+            }
+        }
+
+        index_name++;            
+        tok_name = strtok(NULL, "(");
+
+    }
+
+
+    
+    int stat_index = 0;
+    char* tok = strtok(polished_stats, " ");
+
+
     while (tok != NULL){
 
 
-
-
-
-
         if (stat_index == 0) {
-            printf("PID: %s\n", tok);
-        } else if (stat_index == 1) { 
-
-            int count = count_spaces(tok);
-
-            printf("NAME: %s\n", tok);
-            printf("NAME COUNT: %d\n", count);
-
-
-
-        } else if (stat_index == 2) { 
-            printf("state: %s\n", tok);
-        } else if (stat_index == 13) {
-            proc->stime_cpu = atoi(tok);
-            printf("stime: %s\n", tok);
-        } else if (stat_index == 14) {
-            proc->utime_cpu = atoi(tok);
-            printf("utime: %s\n", tok);
-        } else if (stat_index == 21) {
-            proc->starttime_cpu = atoi(tok);
-            printf("starttime: %s\n", tok);
+            proc->state = *tok;
+        } else if (stat_index == 11) {
+            stime_cpu = atoi(tok);
+        } else if (stat_index == 12) {
+            utime_cpu = atoi(tok);
+        } else if (stat_index == 19) {
+            starttime_cpu = atoi(tok);
         }
         stat_index++;            
 
 
         tok = strtok(NULL, " ");
     }
-    */
+
+    float uptime = uptime_finder();
+    float clock = sysconf(_SC_CLK_TCK);
+
+    proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, uptime, starttime_cpu, clock);
     
 
 }
@@ -158,8 +153,6 @@ int process_monitor(){
     DIR *dp;
     struct dirent *ep;     
     dp = opendir ("/proc");
-
-    float uptime = uptime_finder();
 
     
     if (dp != NULL) {
