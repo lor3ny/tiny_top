@@ -35,12 +35,15 @@ float uptime_finder(){
 }
 
 
-float compute_cpu_usage(float stime, float ultime, float uptime, float starttime, float clock){
+float compute_cpu_usage(float stime, float utime, float starttime) {
 
-    float total_usage = (stime + ultime)* 100;
+    float uptime = uptime_finder();
+    float clock = sysconf(_SC_CLK_TCK);
+
+    float total_usage = (stime + utime)* 100;
     float elapsed_time = uptime - (starttime/clock);
-    float cpu_usage = (total_usage/clock)/elapsed_time;
-
+    float cpu_usage = (total_usage/clock)/ elapsed_time;
+    return cpu_usage;
 }
 
 float compute_mem_usage(){
@@ -139,11 +142,12 @@ void setup_process(char* stats){
         tok = strtok(NULL, " ");
     }
 
-    float uptime = uptime_finder();
-    float clock = sysconf(_SC_CLK_TCK);
+    proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu,starttime_cpu);
 
-    proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, uptime, starttime_cpu, clock);
-    
+    proc->mem_usage = compute_mem_usage();
+
+
+    printf("%0.4f\n", proc->cpu_usage);
 
 }
 
