@@ -191,7 +191,8 @@ int process_monitor(){
         return -1;
     }
 
-    
+    process* procs[100];
+    int count = 0;
 
     while (( processes_list = readdir (procDIR)) != NULL) {
 
@@ -207,12 +208,24 @@ int process_monitor(){
 
             setup_process(stats_content_buf, proc, sinfo); 
             
-            printf("%d   %c   %0.4f   %0.4f   %s\n", proc->pid, proc->state, proc->cpu_usage, proc->mem_usage, proc->name);   
+            printf("%d   %c   %0.4f   %0.4f   %s\n", proc->pid, proc->state, proc->cpu_usage, proc->mem_usage, proc->name);  
 
+            /*
+            if(count < 100){
+                procs[count] = proc;
+                count++;
+            }
+            */
         }
     } 
-
     closedir(procDIR);
+
+    /*
+    for(int i = 0; i<count; i++){
+       printf("%d   %c   %0.4f   %0.4f   %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+    }
+    */
+
 
     return 0;
 }
