@@ -9,8 +9,10 @@
 #include <regex.h>
 #include <sys/poll.h>
 #include <sys/select.h>
+#include <pthread.h>
 
 
+int quit = 0;
 
 typedef struct {
 
@@ -178,7 +180,16 @@ void get_sysinfo(sysinfo* s){
 }
 
 
-int process_monitor(){
+void* process_monitor(){
+
+    while (1)
+    {
+
+    if(quit==1){
+        pthread_exit(NULL);
+    }
+    
+    system("clear");
     
     DIR *procDIR;   
     struct dirent *processes_list;  
@@ -189,7 +200,7 @@ int process_monitor(){
 
     if(procDIR == NULL){
         perror("Couldn't open the directory");
-        return -1;
+        pthread_exit(NULL);
     }
 
     process* procs[1000];
@@ -216,9 +227,13 @@ int process_monitor(){
         }
     } 
 
+
+
+
+
     
     for(int i = 0; i<count; i++){
-       printf("%d   %c   %0.4f   %0.4f   %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+       printf("     %d      %c      %0.4f      %0.4f   %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
 
        free(procs[i]->name);
        free(procs[i]);
@@ -229,24 +244,73 @@ int process_monitor(){
 
     free(sinfo);
 
+    sleep(2);
 
-    return 0;
+    }
+
+    pthread_exit(NULL);
+
 }
 
 
+void* inp(){
+    char command;
+    printf(" >> ");
+    scanf("%c", &command);
 
-
-
+    if(command == 's'){
+        exit(0);
+    }
+}
 
 int main(){
 
+    /*
+    pid_t pid = fork();
+
+    if(pid == 0){
+        char* command;
+        scanf("%c", command);
+        if(strcmp(command, "exit")){
+            return 0;
+        }
+        printf("%s\n", command);
+    }
+    */
+
+
+    pthread_t id;
+    pthread_t inp;
+    int res = pthread_create(&id, NULL, &process_monitor, NULL);
+    res = pthread_create(&inp, NULL, &process_monitor, NULL);
+    
+    pthread_exit(NULL);
+    /*
+    int cycle = 1;
+
+
     while(1){
+
         system("clear");
-
         printf("       PID          STATE         CPU             MEM             COMMAND\n");
-
         process_monitor();
 
-        sleep(1);
+        printf(">> ");
+
+        if (cycle == 1){
+            sleep(1);
+            continue;
+        }
+
+        char command;
+        scanf("%c", &command);
+
+        if(command == 's'){
+            continue;
+        }
+
     }
+    */
+
+    
 }
