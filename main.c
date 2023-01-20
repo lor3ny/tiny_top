@@ -10,6 +10,10 @@
 #include <sys/poll.h>
 #include <sys/select.h>
 #include <pthread.h>
+#include <sys/poll.h>
+#include <signal.h>
+#include <termios.h>
+
 
 
 int quit = 0;
@@ -180,10 +184,8 @@ void get_sysinfo(sysinfo* s){
 }
 
 
-void* process_monitor(){
+int process_monitor(){
 
-    while (1)
-    {
 
     if(quit==1){
         pthread_exit(NULL);
@@ -228,9 +230,6 @@ void* process_monitor(){
     } 
 
 
-
-
-
     
     for(int i = 0; i<count; i++){
        printf("     %d      %c      %0.4f      %0.4f   %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
@@ -238,18 +237,11 @@ void* process_monitor(){
        free(procs[i]->name);
        free(procs[i]);
     }
-    
+
     rewinddir(procDIR);
     closedir(procDIR);
 
     free(sinfo);
-
-    sleep(2);
-
-    }
-
-    pthread_exit(NULL);
-
 }
 
 
@@ -263,54 +255,66 @@ void* inp(){
     }
 }
 
+void set_term_quiet_input(){
+	struct termios tc;
+	tcgetattr(0, &tc);
+	tc.c_lflag &= ~ICANON;
+	tcsetattr(0, TCSANOW, &tc);
+}
+
 int main(){
 
-    /*
-    pid_t pid = fork();
-
-    if(pid == 0){
-        char* command;
-        scanf("%c", command);
-        if(strcmp(command, "exit")){
-            return 0;
-        }
-        printf("%s\n", command);
-    }
-    */
-
-
-    pthread_t id;
-    pthread_t inp;
-    int res = pthread_create(&id, NULL, &process_monitor, NULL);
-    res = pthread_create(&inp, NULL, &process_monitor, NULL);
     
-    pthread_exit(NULL);
-    /*
-    int cycle = 1;
+    int cycle = 0;
 
+    struct pollfd mypoll;
+
+    memset(&mypoll,0, sizeof(mypoll));
+    mypoll.fd = 0;
+    mypoll.events = POLLIN;
+    set_term_quiet_input();
+
+    int pid;
 
     while(1){
 
         system("clear");
+
         printf("       PID          STATE         CPU             MEM             COMMAND\n");
         process_monitor();
 
         printf(">> ");
 
-        if (cycle == 1){
-            sleep(1);
-            continue;
-        }
+        if (poll(&mypoll, 1, 0)>0) {
+      	int c = getchar();
+		printf("Key pressed: %c \n", c);
+		if (c=='q') return 0;
+		else if(c=='k'){
+		  	printf("Insert pid: \n");
+		  	fscanf(stdin, "%d", &pid);
+		  	kill(pid, SIGKILL);
+		}else if(c=='t') {
+			printf("Insert pid: \n");
+		 	fscanf(stdin, "%d", &pid);
+		 	kill(pid, SIGTERM);
+		}else if(c=='s') {
+			printf("Insert pid: \n");
+		 	fscanf(stdin, "%d", &pid);
+		  	kill(pid, SIGSTOP);
+		}else if(c=='r') {
+			printf("Insert pid: \n");
+		  	fscanf(stdin, "%d", &pid);
+		  	kill(pid, SIGCONT);
+		} else continue;
+		}
 
-        char command;
-        scanf("%c", &command);
-
-        if(command == 's'){
-            continue;
-        }
+        sleep(2);
 
     }
-    */
+    
 
     
 }
+
+
+
