@@ -70,7 +70,6 @@ void readfile(const char* file_path,char* buf){
 }
 
 
-
 void setup_process(char* stats, process* proc, sysinfo* sinfo){
     
     char polished_stats[1000];
@@ -79,45 +78,33 @@ void setup_process(char* stats, process* proc, sysinfo* sinfo){
     long unsigned int utime_cpu;
     long unsigned int starttime_cpu;
     long unsigned int rss;
+    
 
-    char* toks_stats = strtok(stats, "(");
-
-    int tok_i = 0;
-    while (toks_stats != NULL){
-
-        if(tok_i == 0){
-
-            proc->pid = atoi(toks_stats);
-        }
-
-
-        if(tok_i== 1) {
-
-            int tok_sliced_i = 0;
-            char* toks_sliced_stats = strtok(toks_stats, ")");
-
-            while (toks_sliced_stats  != NULL){
-
-                if(tok_sliced_i  == 0) {
-
-                    proc->name = toks_sliced_stats;
-                }
-
-                if(tok_sliced_i  == 1) {
-                    sprintf(polished_stats ,"%s", toks_sliced_stats);
-                }
-
-                tok_sliced_i++;            
-                toks_sliced_stats = strtok(NULL, ")");
-            }
-        }
-
-        tok_i++;            
-        toks_stats = strtok(NULL, "(");
-
+    char buf[100];
+    int i = 0;
+    while(stats[i] != '('){
+        buf[i] = stats[i];
+        i++;
     }
+    proc->pid = atoi(buf);
+    
+    i++;
 
+    int offset = i;
+    while(stats[i] != ')'){
+        buf[i-offset] = stats[i];
+        i++;
+    }
+    buf[i] = '\0';
+    i++;
+    proc->name = (char*) malloc(sizeof(char) * 64);
+    strcpy(proc->name, buf);
 
+    offset = i;
+    while(stats[i] != '\0'){
+        polished_stats[i-offset] = stats[i];
+        i++;
+    }
 
     int stat_index = 0;
     char* tok = strtok(polished_stats, " ");
@@ -142,6 +129,7 @@ void setup_process(char* stats, process* proc, sysinfo* sinfo){
 
         tok = strtok(NULL, " ");
     }
+    
 
     proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, starttime_cpu, sinfo);
     proc->mem_usage = compute_mem_usage(rss, sinfo);
@@ -178,12 +166,11 @@ void get_sysinfo(sysinfo* s){
 
 int process_monitor(){
     
-    DIR *procDIR;
-    struct dirent *processes_list;     
-    procDIR = opendir ("/proc");
-
+    DIR *procDIR;   
+    struct dirent *processes_list;  
     sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
     get_sysinfo(sinfo);
+    procDIR = opendir ("/proc");
     
 
     if(procDIR == NULL){
@@ -191,9 +178,9 @@ int process_monitor(){
         return -1;
     }
 
-    process* procs[100];
+    process* procs[20000];
     int count = 0;
-
+    
     while (( processes_list = readdir (procDIR)) != NULL) {
 
         if(isdigit(processes_list->d_name[0])) {
@@ -204,27 +191,31 @@ int process_monitor(){
             char stats_content_buf[512];
             readfile(stat_address_buf, stats_content_buf);
 
-            process* proc = (process*) malloc(sizeof(process));  
+            procs[count] = (process*) malloc(sizeof(process));  
 
-            setup_process(stats_content_buf, proc, sinfo); 
+            setup_process(stats_content_buf, procs[count], sinfo); 
             
-            printf("%d   %c   %0.4f   %0.4f   %s\n", proc->pid, proc->state, proc->cpu_usage, proc->mem_usage, proc->name);  
-
-            /*
-            if(count < 100){
-                procs[count] = proc;
+            //printf("%d   %c   %0.4f   %0.4f   %s\n", procs[count]->pid, procs[count]->state, procs[count]->cpu_usage, procs[count]->mem_usage, procs[count]->name);  
+            
+            if(count < 20000){
                 count++;
             }
-            */
+            
         }
     } 
-    closedir(procDIR);
 
-    /*
+    
     for(int i = 0; i<count; i++){
        printf("%d   %c   %0.4f   %0.4f   %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+
+       free(procs[i]->name);
+       free(procs[i]);
     }
-    */
+    
+    rewinddir(procDIR);
+    closedir(procDIR);
+
+    free(sinfo);
 
 
     return 0;
