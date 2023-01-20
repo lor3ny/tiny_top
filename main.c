@@ -184,25 +184,47 @@ void get_sysinfo(sysinfo* s){
 }
 
 
-int process_monitor(){
+void build_processes_buffer(process** procs){
 
+    char* procs_buf = (char*) malloc(sizeof(char) * 100000);
+    strcat(procs_buf,"\n\n--- PID ----- STATE -------- CPU USAGE---- MEM USAGE --- COMMAND\n\n");
 
-    if(quit==1){
-        pthread_exit(NULL);
+    for(int i = 0; i<20; i++){
+
+        char p_buf[100];
+        sprintf(p_buf,"     %d          %c             %0.4f        %0.4f       %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+        strcat(procs_buf, p_buf);
+        free(procs[i]->name);
+        free(procs[i]);
     }
-    
-    system("clear");
+
+    strcat(procs_buf,"\n\n (q) quit\n\n");
+
+    printf("%s", procs_buf);
+
+    free(procs_buf);
+
+}
+
+void sort_processes(process** procs){
+
+
+    //bubblesort
+    return;
+}
+
+int process_monitor(sysinfo* sinfo){
+
     
     DIR *procDIR;   
     struct dirent *processes_list;  
-    sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
     get_sysinfo(sinfo);
     procDIR = opendir ("/proc");
     
 
     if(procDIR == NULL){
         perror("Couldn't open the directory");
-        pthread_exit(NULL);
+        return -1;
     }
 
     process* procs[1000];
@@ -229,91 +251,102 @@ int process_monitor(){
         }
     } 
 
+    sort_processes(procs);
 
-    
-    for(int i = 0; i<count; i++){
-       printf("     %d      %c      %0.4f      %0.4f   %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
-
-       free(procs[i]->name);
-       free(procs[i]);
-    }
+    build_processes_buffer(procs);
 
     rewinddir(procDIR);
     closedir(procDIR);
-
-    free(sinfo);
 }
 
-
-void* inp(){
-    char command;
-    printf(" >> ");
-    scanf("%c", &command);
-
-    if(command == 's'){
-        exit(0);
-    }
-}
 
 void set_term_quiet_input(){
-	struct termios tc;
-	tcgetattr(0, &tc);
-	tc.c_lflag &= ~ICANON;
-	tcsetattr(0, TCSANOW, &tc);
+	  struct termios tc;
+	  tcgetattr(0, &tc);
+	  tc.c_lflag &= ~ICANON;
+	  tcsetattr(0, TCSANOW, &tc);
 }
 
-int main(){
-
-    
-    int cycle = 0;
-
-    struct pollfd mypoll;
-
-    memset(&mypoll,0, sizeof(mypoll));
-    mypoll.fd = 0;
-    mypoll.events = POLLIN;
-    set_term_quiet_input();
-
-    int pid;
+void show_procs(sysinfo* sinfo, struct pollfd mypoll){
 
     while(1){
 
         system("clear");
 
-        printf("       PID          STATE         CPU             MEM             COMMAND\n");
-        process_monitor();
+        process_monitor(sinfo);
 
-        printf(">> ");
+        if(poll(&mypoll, 1, 0)>0){
 
-        if (poll(&mypoll, 1, 0)>0) {
-      	int c = getchar();
-		printf("Key pressed: %c \n", c);
-		if (c=='q') return 0;
-		else if(c=='k'){
-		  	printf("Insert pid: \n");
-		  	fscanf(stdin, "%d", &pid);
-		  	kill(pid, SIGKILL);
-		}else if(c=='t') {
-			printf("Insert pid: \n");
-		 	fscanf(stdin, "%d", &pid);
-		 	kill(pid, SIGTERM);
-		}else if(c=='s') {
-			printf("Insert pid: \n");
-		 	fscanf(stdin, "%d", &pid);
-		  	kill(pid, SIGSTOP);
-		}else if(c=='r') {
-			printf("Insert pid: \n");
-		  	fscanf(stdin, "%d", &pid);
-		  	kill(pid, SIGCONT);
-		} else continue;
-		}
+            char c = getchar();
+            if(c == 'q'){
+                system("clear");
+                break;
+            }
 
+        }
         sleep(2);
-
     }
-    
 
+}
+
+void manage_procs(){
+    while(1) {
+        system("clear");
+        printf("tiny top :< processes manager\n\n");
+        printf(" (k) kill\n (t) terminate\n (s) suspend\n (r) resume\n (q) back\n\n");
+
+        int pid;
+        int command;
+        printf("che famo >> ");
+        scanf("%d\n", &command);
+
+        if(command == 'k'){
+            kill(pid, SIGKILL);
+        } else if (command == 't'){
+            kill(pid, SIGTERM);
+        } else if (command == 's') {
+            kill(pid, SIGSTOP);
+        } else if (command == 'r') {
+            kill(pid, SIGCONT);
+        } else if (command == 'q'){
+            exit(0);
+        }
+    }
+}
+
+	
+
+int main(){
+
+    system("clear");
+
+    sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
+
+
+    struct pollfd mypoll;
+    mypoll.fd = 0;
+    mypoll.events = POLLIN;
+    set_term_quiet_input();
     
+    while(1){
+
+        printf("tiny top :)\n\n");
+        printf(" (s) show processes\n (a) show all process :(\n (m) manage process \n\n>> ");
+        char command;
+        command = getchar();
+
+        if(command == 's'){
+            show_procs(sinfo, mypoll);
+        } else if (command == 'm'){
+
+            manage_procs();
+
+        } else if (command == 'q') {
+            exit(0);
+        }
+        system("clear");
+    }
+    free(sinfo);
 }
 
 
