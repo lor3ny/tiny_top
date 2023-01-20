@@ -72,68 +72,82 @@ void readfile(const char* file_path,char* buf){
 
 void setup_process(char* stats, process* proc, sysinfo* sinfo){
     
-    char polished_stats[1000];
+    char* polished_stats = (char*) malloc(sizeof(char)*1024);
 
     long unsigned int stime_cpu;
     long unsigned int utime_cpu;
     long unsigned int starttime_cpu;
     long unsigned int rss;
     
+    //Stats polishing, handling space character in command name in raw mode
 
-    char buf[100];
-    int i = 0;
-    while(stats[i] != '('){
-        buf[i] = stats[i];
-        i++;
+    char buf_pid[16];
+    char buf_name[64];
+    int pid_i;
+    int polish_i;
+    int name_i;
+    int offset;
+
+    while(stats[pid_i] != '('){
+        buf_pid[pid_i] = stats[pid_i];
+        pid_i++;
     }
-    proc->pid = atoi(buf);
+    buf_pid[pid_i] = '\0';
     
-    i++;
-
-    int offset = i;
-    while(stats[i] != ')'){
-        buf[i-offset] = stats[i];
-        i++;
+    name_i = pid_i+1;
+    offset = name_i;
+    while(stats[name_i] != ')'){
+        buf_name[name_i-offset] = stats[name_i];
+        name_i++;
     }
-    buf[i] = '\0';
-    i++;
+    buf_name[name_i-offset] = '\0';
+
+    proc->pid = atoi(buf_pid);
     proc->name = (char*) malloc(sizeof(char) * 64);
-    strcpy(proc->name, buf);
+    strcpy(proc->name, buf_name);
 
-    offset = i;
-    while(stats[i] != '\0'){
-        polished_stats[i-offset] = stats[i];
-        i++;
+    polish_i = name_i+2;
+    offset = polish_i;
+    while(stats[polish_i] != '\0'){
+        polished_stats[polish_i-offset] = stats[polish_i];
+        polish_i++;
     }
+
+    //Achiving parameters from the polished stats string
 
     int stat_index = 0;
     char* tok = strtok(polished_stats, " ");
 
-
     while (tok != NULL){
 
-
-        if (stat_index == 0) {
+        if (stat_index == 0) 
             proc->state = *tok;
-        } else if (stat_index == 11) {
+
+        else if (stat_index == 11) 
             stime_cpu = atoi(tok);
-        } else if (stat_index == 12) {
+
+        else if (stat_index == 12)
             utime_cpu = atoi(tok);
-        } else if (stat_index == 19) {
+
+        else if (stat_index == 19) 
             starttime_cpu = atoi(tok);
-        } else if (stat_index == 21) {
+
+        else if (stat_index == 21) 
             rss = atoi(tok);
-        }
+
         stat_index++;            
 
 
         tok = strtok(NULL, " ");
     }
-    
+
+    //Compute cpu usage percentage and memory usage percentage
 
     proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, starttime_cpu, sinfo);
     proc->mem_usage = compute_mem_usage(rss, sinfo);
 
+    free(polished_stats);
+    
     return;
 }
 
@@ -178,7 +192,7 @@ int process_monitor(){
         return -1;
     }
 
-    process* procs[20000];
+    process* procs[1000];
     int count = 0;
     
     while (( processes_list = readdir (procDIR)) != NULL) {
@@ -194,8 +208,6 @@ int process_monitor(){
             procs[count] = (process*) malloc(sizeof(process));  
 
             setup_process(stats_content_buf, procs[count], sinfo); 
-            
-            //printf("%d   %c   %0.4f   %0.4f   %s\n", procs[count]->pid, procs[count]->state, procs[count]->cpu_usage, procs[count]->mem_usage, procs[count]->name);  
             
             if(count < 20000){
                 count++;
