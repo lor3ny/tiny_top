@@ -184,21 +184,22 @@ void get_sysinfo(sysinfo* s){
 }
 
 
-void build_processes_buffer(process** procs){
+void build_processes_buffer(process** procs, int count){
 
-    char* procs_buf = (char*) malloc(sizeof(char) * 100000);
+    char* procs_buf = (char*) malloc(sizeof(char) * 1000);
+    strcat(procs_buf, "TITLE");
     strcat(procs_buf,"\n\n--- PID ----- STATE -------- CPU USAGE---- MEM USAGE --- COMMAND\n\n");
 
-    for(int i = 0; i<20; i++){
+    for(int i = 0; i<count; i++){
 
-        char p_buf[100];
+        char p_buf[512];
         sprintf(p_buf,"     %d          %c             %0.4f        %0.4f       %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
         strcat(procs_buf, p_buf);
         free(procs[i]->name);
         free(procs[i]);
     }
 
-    strcat(procs_buf,"\n\n (q) quit\n\n");
+    strcat(procs_buf,"\n\n (q) quit\n (b) back\n (enter) update\n\n>> ");
 
     printf("%s", procs_buf);
 
@@ -213,7 +214,16 @@ void sort_processes(process** procs){
     return;
 }
 
-int process_monitor(sysinfo* sinfo){
+/*
+void set_term_quiet_input(){
+	  struct termios tc;
+	  tcgetattr(0, &tc);
+	  tc.c_lflag &= ~ICANON;
+	  tcsetattr(0, TCSANOW, &tc);
+}
+*/
+
+int process_monitor(sysinfo* sinfo, int mode){
 
     
     DIR *procDIR;   
@@ -252,82 +262,71 @@ int process_monitor(sysinfo* sinfo){
     } 
 
     sort_processes(procs);
-
-    build_processes_buffer(procs);
+    if(mode == 0){
+        mode = 2000;
+    }
+    build_processes_buffer(procs, mode);
 
     rewinddir(procDIR);
     closedir(procDIR);
 }
 
-
-void set_term_quiet_input(){
-	  struct termios tc;
-	  tcgetattr(0, &tc);
-	  tc.c_lflag &= ~ICANON;
-	  tcsetattr(0, TCSANOW, &tc);
-}
-
-void show_procs(sysinfo* sinfo, struct pollfd mypoll){
+void show_procs(sysinfo* sinfo, int mode){
 
     while(1){
-
+        
         system("clear");
+        process_monitor(sinfo, mode);
 
-        process_monitor(sinfo);
+        char c;
+        c = getchar();
 
-        if(poll(&mypoll, 1, 0)>0){
-
-            char c = getchar();
-            if(c == 'q'){
-                system("clear");
-                break;
-            }
-
+        if(c == 'q'){
+            exit(0);
+        } else if(c == 'b') {
+            break;
         }
-        sleep(2);
+
     }
+
 
 }
 
-void manage_procs(){
-    while(1) {
+void manage_procs(sysinfo* sinfo){
+
         system("clear");
         printf("tiny top :< processes manager\n\n");
-        printf(" (k) kill\n (t) terminate\n (s) suspend\n (r) resume\n (q) back\n\n");
+        printf(" - kill pid\n - terminate pid\n - suspend pid\n - resume pid\n - back\n\n");
 
-        int pid;
+        int pid = 1234;
         int command;
         printf("che famo >> ");
         scanf("%d\n", &command);
 
         if(command == 'k'){
+
             kill(pid, SIGKILL);
+
         } else if (command == 't'){
+
             kill(pid, SIGTERM);
+
         } else if (command == 's') {
+
             kill(pid, SIGSTOP);
+
         } else if (command == 'r') {
+
             kill(pid, SIGCONT);
+
         } else if (command == 'q'){
             exit(0);
         }
-    }
+
 }
 
-	
+void start_menu(sysinfo* sinfo){
 
-int main(){
-
-    system("clear");
-
-    sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
-
-
-    struct pollfd mypoll;
-    mypoll.fd = 0;
-    mypoll.events = POLLIN;
-    set_term_quiet_input();
-    
     while(1){
 
         printf("tiny top :)\n\n");
@@ -336,16 +335,29 @@ int main(){
         command = getchar();
 
         if(command == 's'){
-            show_procs(sinfo, mypoll);
+            show_procs(sinfo, 20);
+        } else if (command == 'a'){
+            show_procs(sinfo, 0);
         } else if (command == 'm'){
-
-            manage_procs();
-
+            manage_procs(sinfo);
         } else if (command == 'q') {
             exit(0);
         }
+
         system("clear");
     }
+
+}
+	
+
+int main(){
+
+    system("clear");
+
+    sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
+    
+    start_menu(sinfo);
+    
     free(sinfo);
 }
 
