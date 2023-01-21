@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "param.h": "c",
-        "select.h": "c"
+        "select.h": "c",
+        "tiny_top_lib.h": "c"
     }
 }
