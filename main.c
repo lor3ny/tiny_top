@@ -37,7 +37,11 @@ typedef struct{
 
 } sysinfo;
 
-
+void quitting(){
+    system("clear");
+    printf("\n\n\n   _______ ___ _______ _______    __ ___\n  |   _   |   |   _   |   _   |  |__|_  `.\n  |.  1___|.  |.  1   |.  |   |   __  |  |\n  |.  |___|.  |.  _   |.  |   |  |__|_|  |\n  |:  1   |:  |:  |   |:  1   |     |___,'\n  |::.. . |::.|::.|:. |::.. . |\n  `-------`---`--- ---`-------'\n\n\n");
+    exit(0);
+}
 
 
 float compute_cpu_usage(long unsigned int stime, long unsigned int utime, long unsigned int starttime, sysinfo* sinfo) {
@@ -186,25 +190,24 @@ void get_sysinfo(sysinfo* s){
 
 void build_processes_buffer(process** procs, int count){
 
-    char* procs_buf = (char*) malloc(sizeof(char) * 1000);
-    strcat(procs_buf, "TITLE");
-    strcat(procs_buf,"\n\n--- PID ----- STATE -------- CPU USAGE---- MEM USAGE --- COMMAND\n\n");
+    char* procs_buf = (char*) malloc(sizeof(char) * 128000);
+
+
+    strcat(procs_buf, " _  _  _ .|_ _  _\n|||(_)| )||_(_)|");
+    strcat(procs_buf,"\n\n--- PID ----- STATE ---------- CPU USAGE ------ MEM USAGE ------ COMMAND\n\n");
 
     for(int i = 0; i<count; i++){
 
         char p_buf[512];
-        sprintf(p_buf,"     %d          %c             %0.4f        %0.4f       %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+        sprintf(p_buf,"     %d          %c             %0.8f        %0.8f       %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
         strcat(procs_buf, p_buf);
-        free(procs[i]->name);
-        free(procs[i]);
     }
 
-    strcat(procs_buf,"\n\n (q) quit\n (b) back\n (enter) update\n\n>> ");
+    strcat(procs_buf,"\n\n (q) quit\n (b) back\n (enter) update\n\n");
 
     printf("%s", procs_buf);
 
     free(procs_buf);
-
 }
 
 void sort_processes(process** procs){
@@ -214,14 +217,7 @@ void sort_processes(process** procs){
     return;
 }
 
-/*
-void set_term_quiet_input(){
-	  struct termios tc;
-	  tcgetattr(0, &tc);
-	  tc.c_lflag &= ~ICANON;
-	  tcsetattr(0, TCSANOW, &tc);
-}
-*/
+
 
 int process_monitor(sysinfo* sinfo, int mode){
 
@@ -263,7 +259,7 @@ int process_monitor(sysinfo* sinfo, int mode){
 
     sort_processes(procs);
     if(mode == 0){
-        mode = 2000;
+        mode = sizeof(procs)/sizeof(process);
     }
     build_processes_buffer(procs, mode);
 
@@ -282,7 +278,7 @@ void show_procs(sysinfo* sinfo, int mode){
         c = getchar();
 
         if(c == 'q'){
-            exit(0);
+            quitting();
         } else if(c == 'b') {
             break;
         }
@@ -295,33 +291,38 @@ void show_procs(sysinfo* sinfo, int mode){
 void manage_procs(sysinfo* sinfo){
 
         system("clear");
-        printf("tiny top :< processes manager\n\n");
+        printf("  __    __ __ __\n |  |--|__|  |  .-----.----.\n |    <|  |  |  |  -__|   _|\n |__|__|__|__|__|_____|__|\n\n");
         printf(" - kill pid\n - terminate pid\n - suspend pid\n - resume pid\n - back\n\n");
 
-        int pid = 1234;
-        int command;
-        printf("che famo >> ");
-        scanf("%d\n", &command);
+        int pid;
+        char action;
 
-        if(command == 'k'){
+        printf("Action: ");
+        scanf("%c", &action);
+        printf("%c\n",action);
+        printf("PID: ");
+        scanf("%d", &pid);
+
+        if(action == 'k'){
 
             kill(pid, SIGKILL);
 
-        } else if (command == 't'){
+        } else if (action == 't'){
 
             kill(pid, SIGTERM);
 
-        } else if (command == 's') {
+        } else if (action == 's') {
 
             kill(pid, SIGSTOP);
 
-        } else if (command == 'r') {
+        } else if (action == 'r') {
 
             kill(pid, SIGCONT);
 
-        } else if (command == 'q'){
-            exit(0);
+        } else if (action == 'q'){
+            quitting();
         }
+        
 
 }
 
@@ -329,11 +330,16 @@ void start_menu(sysinfo* sinfo){
 
     while(1){
 
-        printf("tiny top :)\n\n");
-        printf(" (s) show processes\n (a) show all process :(\n (m) manage process \n\n>> ");
-        char command;
-        command = getchar();
+        system("clear");
 
+        printf("\n\n  w   w                  w\n w8ww w 8d8b. Yb  dP    w8ww .d8b. 88b.\n  8   8 8P Y8  YbdP      8   8' .8 8  8\n  Y8P 8 8   8   dP       Y8P `Y8P' 88P'\n               dP                  8\n\n\n");
+        printf(" (s) show processes\n (a) show all processes :(\n (m) manage processes \n (q) quit\n\n");
+
+        char command;
+        scanf("%c", &command);
+        printf("%c\n",command);
+
+        
         if(command == 's'){
             show_procs(sinfo, 20);
         } else if (command == 'a'){
@@ -341,10 +347,10 @@ void start_menu(sysinfo* sinfo){
         } else if (command == 'm'){
             manage_procs(sinfo);
         } else if (command == 'q') {
-            exit(0);
+            quitting();
         }
+        
 
-        system("clear");
     }
 
 }
