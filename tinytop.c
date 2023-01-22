@@ -2,20 +2,20 @@
 
 //gcc -o tinytop tinytop.c tt_process_monitor.c tt_utilities.c
 
-void show_procs(sysinfo* sinfo, int mode){
+void show_procs(int mode){
 
     while(1){
         
         system("clear");
         fflush(stdout);
         
-        process_monitor(sinfo, mode);
+        process_monitor(mode);
 
         int command;
         scanf("%d", &command);
 
         if(command == 1){
-            manage_procs(sinfo);
+            manage_procs();
         } else if(command == 2) {
             break;
         }
@@ -25,7 +25,7 @@ void show_procs(sysinfo* sinfo, int mode){
 
 }
 
-void manage_procs(sysinfo* sinfo){
+void manage_procs(){
 
         printf("  __    __ __ __\n |  |--|__|  |  .-----.----.\n |    <|  |  |  |  -__|   _|\n |__|__|__|__|__|_____|__|\n\n");
         printf(" (1) kill \n (2) terminate pid\n (3) suspend pid\n (4) resume pid\n ---\n (5) back\n\n");
@@ -65,7 +65,6 @@ void manage_procs(sysinfo* sinfo){
 
 int main(){
 
-    sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
     
     while(1){
 
@@ -81,15 +80,15 @@ int main(){
         
         if(command == 1){
 
-            show_procs(sinfo, 1);
+            show_procs(1);
 
         } else if (command == 2){
 
-            show_procs(sinfo, 0);
+            show_procs(0);
 
         } else if (command == 3){
 
-            manage_procs(sinfo);
+            manage_procs();
 
         } else if (command == 4) {
 
@@ -97,8 +96,7 @@ int main(){
         }
         
     }
-    
-    free(sinfo);
+
 
     exit(0);
 }

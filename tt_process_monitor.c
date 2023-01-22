@@ -2,18 +2,36 @@
 #include "tt_lib.h"
 
 
-float compute_cpu_usage(long unsigned int stime, long unsigned int utime, long unsigned int starttime, sysinfo* sinfo) {
+float compute_cpu_usage(long unsigned int stime, long unsigned int utime, long unsigned int starttime) {
+
+    float uptime;
+    char buf[13];
+    sprintf(buf, "/proc/uptime");
+    FILE* fd_uptime = fopen(buf, "r");
+    fscanf(fd_uptime, "%f", &uptime);
+    fclose(fd_uptime);    
+
+    float clock = sysconf(_SC_CLK_TCK);
 
     float total_usage = (stime + utime)* 100;
-    float elapsed_time = sinfo->uptime - (starttime/sinfo->clock);
-    float cpu_usage = (total_usage/sinfo->clock)/ elapsed_time;
+    float elapsed_time = uptime - (starttime/clock);
+    float cpu_usage = (total_usage/clock)/ elapsed_time;
 
     return cpu_usage;
 }
 
-float compute_mem_usage(long unsigned int rss, sysinfo* sinfo){
+float compute_mem_usage(long unsigned int rss){
 
-    float mem_usage = ((rss * sinfo->page_size)/ sinfo->total_memory)*100;
+    float page_size = sysconf(_SC_PAGESIZE)/1000;
+
+    float total_memory ;
+    char meminfo_buf[14];
+    sprintf(meminfo_buf, "/proc/meminfo");
+    FILE* meminfo_f = fopen(meminfo_buf, "r");
+    fscanf(meminfo_f, "%*s %f", &total_memory); 
+    fclose(meminfo_f);
+
+    float mem_usage = ((rss * page_size)/ total_memory)*100;
 
     return mem_usage;
 }
@@ -80,7 +98,7 @@ void build_processes_buffer(process** procs, int count){
 }
 
 
-void setup_process(char* stats, process* proc, sysinfo* sinfo){
+void setup_process(char* stats, process* proc){
     
     char* polished_stats = (char*) malloc(sizeof(char)*1024);
 
@@ -153,8 +171,8 @@ void setup_process(char* stats, process* proc, sysinfo* sinfo){
 
     //Compute cpu usage percentage and memory usage percentage
 
-    proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, starttime_cpu, sinfo);
-    proc->mem_usage = compute_mem_usage(rss, sinfo);
+    proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, starttime_cpu);
+    proc->mem_usage = compute_mem_usage(rss);
 
     free(polished_stats);
     
@@ -162,11 +180,10 @@ void setup_process(char* stats, process* proc, sysinfo* sinfo){
 }
 
 
-int process_monitor(sysinfo* sinfo, int mode){
+int process_monitor(int mode){
     
     DIR *procDIR;   
     struct dirent *processes_list;  
-    get_sysinfo(sinfo);
     procDIR = opendir ("/proc");
     
 
@@ -180,7 +197,7 @@ int process_monitor(sysinfo* sinfo, int mode){
 
     for(int i = 0; i<1000; i++){
         procs[i] = (process*) malloc(sizeof(process));  
-        procs[i]->name = (char*) malloc(sizeof(char) * 64);
+        procs[i]->name;
     }
 
     
@@ -194,10 +211,11 @@ int process_monitor(sysinfo* sinfo, int mode){
             char stats_content_buf[512];
             readfile(stat_address_buf, stats_content_buf);
 
-            setup_process(stats_content_buf, procs[count], sinfo); 
+            setup_process(stats_content_buf, procs[count]); 
             
-            if(count < 1000){
-                count++;
+            count++;
+            if(count >= 1000){
+                break;
             }
             
         }
