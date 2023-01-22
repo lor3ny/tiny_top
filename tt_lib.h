@@ -11,7 +11,7 @@
 typedef struct {
 
     int pid;
-    char* name;
+    char name[64];
     char state;
     float cpu_usage;
     float mem_usage;
@@ -32,9 +32,9 @@ int digits_counter(long unsigned int digit);
 float compute_cpu_usage(long unsigned int stime, long unsigned int utime, long unsigned int starttime);
 float compute_mem_usage(long unsigned int rss);
 void sort_processes(process** procs, long unsigned int procs_count);
-void build_processes_buffer(process** procs, int count);
+void build_processes_buffer(process** procs, int count, char* procs_buf);
 void setup_process(char* stats, process* proc);
-int process_monitor(int mode);
+int process_monitor(int mode, char* procs_buf);
 
 
 void show_procs(int mode);

@@ -4,12 +4,14 @@
 
 void show_procs(int mode){
 
-    while(1){
+    char procs_buf[64000];
+
+    while(1){ 
         
         system("clear");
         fflush(stdout);
         
-        process_monitor(mode);
+        process_monitor(mode, procs_buf);
 
         int command;
         scanf("%d", &command);
@@ -21,7 +23,6 @@ void show_procs(int mode){
         }
 
     }
-
 
 }
 

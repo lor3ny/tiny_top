@@ -64,10 +64,10 @@ void sort_processes(process** procs, long unsigned int procs_count){
 }
 
 
-void build_processes_buffer(process** procs, int count){
+void build_processes_buffer(process** procs, int count, char* procs_buf){
 
-    char* procs_buf = (char*) malloc(sizeof(char) * 128000);
 
+    procs_buf=strncpy(procs_buf,"",64000);
 
     strcat(procs_buf, " _  _  _ .|_ _  _\n|||(_)| )||_(_)|");
     strcat(procs_buf,"\n\n---- PID ----- STATE ---------- CPU USAGE ------- MEM USAGE ------ COMMAND\n\n");
@@ -90,11 +90,9 @@ void build_processes_buffer(process** procs, int count){
         strcat(procs_buf, p_buf);
     }
 
-    strcat(procs_buf,"\n\n (0) update\n (1) manage procs\n ---\n (2) back\n\n");
+    strcat(procs_buf,"\n\n (0) update\n (1) manage procs\n ---\n (2) back\n\n>> ");
 
     printf("%s", procs_buf);
-
-    free(procs_buf);
 }
 
 
@@ -131,7 +129,6 @@ void setup_process(char* stats, process* proc){
     buf_name[name_i-offset] = '\0';
 
     proc->pid = atoi(buf_pid);
-    proc->name = (char*) malloc(sizeof(char) * 64);
     strcpy(proc->name, buf_name);
 
     polish_i = name_i+2;
@@ -180,7 +177,7 @@ void setup_process(char* stats, process* proc){
 }
 
 
-int process_monitor(int mode){
+int process_monitor(int mode, char* procs_buf){
     
     DIR *procDIR;   
     struct dirent *processes_list;  
@@ -197,7 +194,6 @@ int process_monitor(int mode){
 
     for(int i = 0; i<1000; i++){
         procs[i] = (process*) malloc(sizeof(process));  
-        procs[i]->name;
     }
 
     
@@ -228,13 +224,12 @@ int process_monitor(int mode){
         procs_count = 20;
     }
     
-    build_processes_buffer(procs, procs_count);
+    build_processes_buffer(procs, procs_count, procs_buf);
 
     rewinddir(procDIR);
     closedir(procDIR);
 
     for(int i = 0; i<1000; i++){
-        free(procs[i]->name);
         free(procs[i]);
     }
 
