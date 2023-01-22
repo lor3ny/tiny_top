@@ -176,12 +176,6 @@ int process_monitor(sysinfo* sinfo, int mode){
 
     process* procs[1000];
     int count = 0;
-
-    for(int i = 0; i<1000; i++){
-        procs[i] = (process*) malloc(sizeof(process));  
-        procs[i]->name = (char*) malloc(sizeof(char) * 64);
-    }
-
     
     while (( processes_list = readdir (procDIR)) != NULL) {
 
@@ -192,6 +186,9 @@ int process_monitor(sysinfo* sinfo, int mode){
 
             char stats_content_buf[512];
             readfile(stat_address_buf, stats_content_buf);
+
+            procs[count] = (process*) malloc(sizeof(process));  
+            procs[count]->name = (char*) malloc(sizeof(char) * 64);
 
             setup_process(stats_content_buf, procs[count], sinfo); 
 
@@ -216,7 +213,7 @@ int process_monitor(sysinfo* sinfo, int mode){
     rewinddir(procDIR);
     closedir(procDIR);
 
-    for(int i = 0; i<1000; i++){
+    for(int i = 0; i<count; i++){
         free(procs[i]->name);
         free(procs[i]);
     }

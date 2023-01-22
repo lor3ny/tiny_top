@@ -81,7 +81,7 @@ int main(){
         
         if(command == 1){
 
-            show_procs(sinfo, 20);
+            show_procs(sinfo, 1);
 
         } else if (command == 2){
 
