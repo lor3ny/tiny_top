@@ -52,7 +52,7 @@ void get_sysinfo(sysinfo* s){
     s->total_memory = total_memory;
 
     float uptime;
-    char* buf = malloc(sizeof(char)*1000);
+    char buf[13];
     sprintf(buf, "/proc/uptime");
     FILE* fd_uptime = fopen(buf, "r");
     fscanf(fd_uptime, "%f", &uptime);

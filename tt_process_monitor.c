@@ -82,7 +82,7 @@ void build_processes_buffer(process** procs, int count){
 
 void setup_process(char* stats, process* proc, sysinfo* sinfo){
     
-    char* polished_stats = (char*) malloc(sizeof(char)*1024);
+    char polished_stats[1024];
 
     long unsigned int stime_cpu;
     long unsigned int utime_cpu;
@@ -113,7 +113,6 @@ void setup_process(char* stats, process* proc, sysinfo* sinfo){
     buf_name[name_i-offset] = '\0';
 
     proc->pid = atoi(buf_pid);
-    proc->name = (char*) malloc(sizeof(char) * 64);
     strcpy(proc->name, buf_name);
 
     polish_i = name_i+2;
@@ -156,7 +155,7 @@ void setup_process(char* stats, process* proc, sysinfo* sinfo){
     proc->cpu_usage = compute_cpu_usage(stime_cpu, utime_cpu, starttime_cpu, sinfo);
     proc->mem_usage = compute_mem_usage(rss, sinfo);
 
-    free(polished_stats);
+    //free(polished_stats);
     
     return;
 }
@@ -177,6 +176,12 @@ int process_monitor(sysinfo* sinfo, int mode){
 
     process* procs[1000];
     int count = 0;
+
+    for(int i = 0; i<1000; i++){
+        procs[i] = (process*) malloc(sizeof(process));  
+        procs[i]->name = (char*) malloc(sizeof(char) * 64);
+    }
+
     
     while (( processes_list = readdir (procDIR)) != NULL) {
 
@@ -188,26 +193,33 @@ int process_monitor(sysinfo* sinfo, int mode){
             char stats_content_buf[512];
             readfile(stat_address_buf, stats_content_buf);
 
-            procs[count] = (process*) malloc(sizeof(process));  
-
             setup_process(stats_content_buf, procs[count], sinfo); 
+
+            count++;
             
-            if(count < 20000){
-                count++;
+            if(count >= 1000){
+                break;
             }
             
         }
     } 
 
-    sort_processes(procs, sizeof(procs)/sizeof(process));
+    sort_processes(procs, count);
 
-    if(mode == 0){
-        mode = sizeof(procs)/sizeof(process);
+    int print_cap = count; 
+    if(mode == 1){
+        print_cap = 25;
     }
-    build_processes_buffer(procs, mode);
+
+    build_processes_buffer(procs, print_cap);
 
     rewinddir(procDIR);
     closedir(procDIR);
+
+    for(int i = 0; i<1000; i++){
+        free(procs[i]->name);
+        free(procs[i]);
+    }
 
     return 0;
 
