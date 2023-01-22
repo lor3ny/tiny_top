@@ -1,6 +1,8 @@
 
 #include "tt_lib.h"
 
+#define MAX_PROCS 1000
+
 
 float compute_cpu_usage(long unsigned int stime, long unsigned int utime, long unsigned int starttime) {
 
@@ -69,8 +71,8 @@ void build_processes_buffer(process** procs, int count, char* procs_buf){
 
     procs_buf=strncpy(procs_buf,"",64000);
 
-    strcat(procs_buf, " _  _  _ .|_ _  _\n|||(_)| )||_(_)|");
-    strcat(procs_buf,"\n\n---- PID ----- STATE ---------- CPU USAGE ------- MEM USAGE ------ COMMAND\n\n");
+    strcat(procs_buf, "   ___  ___            _ _\n   |  \\/  |           (_) |\n   | .  . | ___  _ __  _| |_ ___  _ __\n   | |\\/| |/ _ \\| '_ \\| | __/ _ \\| '__|\n   | |  | | (_) | | | | | || (_) | |\n   \\_|  |_/\\___/|_| |_|_|\\__\\___/|_|");
+    strcat(procs_buf,"\n\n---- PID ----- STATE ---------- CPU USAGE(%) ------- MEM USAGE(%) ------ COMMAND\n\n");
 
     for(int i = 0; i<count; i++){
 
@@ -189,10 +191,10 @@ int process_monitor(int mode, char* procs_buf){
         return -1;
     }
 
-    process* procs[1000];
+    process* procs[MAX_PROCS];
     int count = 0;
 
-    for(int i = 0; i<1000; i++){
+    for(int i = 0; i<MAX_PROCS; i++){
         procs[i] = (process*) malloc(sizeof(process));  
     }
 
@@ -210,7 +212,7 @@ int process_monitor(int mode, char* procs_buf){
             setup_process(stats_content_buf, procs[count]); 
             
             count++;
-            if(count >= 1000){
+            if(count >= MAX_PROCS){
                 break;
             }
             
