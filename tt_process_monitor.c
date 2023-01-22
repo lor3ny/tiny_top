@@ -176,6 +176,8 @@ int process_monitor(sysinfo* sinfo, int mode){
 
     process* procs[1000];
     int count = 0;
+
+    //daje
     
     while (( processes_list = readdir (procDIR)) != NULL) {
 
