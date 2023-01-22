@@ -7,14 +7,16 @@ void show_procs(sysinfo* sinfo, int mode){
     while(1){
         
         system("clear");
+        fflush(stdout);
+        
         process_monitor(sinfo, mode);
 
-        char c;
-        c = getchar();
+        int command;
+        scanf("%d", &command);
 
-        if(c == 'q'){
-            quitting();
-        } else if(c == 'b') {
+        if(command == 1){
+            manage_procs(sinfo);
+        } else if(command == 2) {
             break;
         }
 
@@ -25,76 +27,71 @@ void show_procs(sysinfo* sinfo, int mode){
 
 void manage_procs(sysinfo* sinfo){
 
-        system("clear");
         printf("  __    __ __ __\n |  |--|__|  |  .-----.----.\n |    <|  |  |  |  -__|   _|\n |__|__|__|__|__|_____|__|\n\n");
-        printf(" (k) kill \n (t) terminate pid\n (s) suspend pid\n (r) resume pid\n (b) back\n\n");
+        printf(" (1) kill \n (2) terminate pid\n (3) suspend pid\n (4) resume pid\n ---\n (5) back\n\n");
 
         int pid;
-        char action;
+        int action;
 
-        /*
-        printf("Action: ");
-        scanf("%c", &action);
-        printf("%c\n",action);
+        
+        printf(">> ");
+        scanf("%d", &action);
+
+        if (action == 5){
+            return;
+        }
+
         printf("PID: ");
         scanf("%d", &pid);
-        */
-
-        /*
-        if(action == 'k'){
+ 
+        if(action == 1){
 
             kill(pid, SIGKILL);
 
-        } else if (action == 't'){
+        } else if (action == 2){
 
             kill(pid, SIGTERM);
 
-        } else if (action == 's') {
+        } else if (action == 3) {
 
             kill(pid, SIGSTOP);
 
-        } else if (action == 'r') {
+        } else if (action == 4) {
 
             kill(pid, SIGCONT);
-
-        } else if (action == 'q'){
-            quitting();
         }
-        */
-        
-
 }
 	
 
 int main(){
-
-    system("clear");
 
     sysinfo* sinfo = (sysinfo*) malloc(sizeof(sysinfo));
     
     while(1){
 
         system("clear");
+        fflush(stdout);
 
         printf("\n\n  w   w                  w\n w8ww w 8d8b. Yb  dP    w8ww .d8b. 88b.\n  8   8 8P Y8  YbdP      8   8' .8 8  8\n  Y8P 8 8   8   dP       Y8P `Y8P' 88P'\n               dP                  8\n\n\n");
-        printf(" (s) show processes\n (a) show all processes :(\n (m) manage processes \n (q) quit\n\n");
+        printf(" (1) show processes\n (2) show all processes \n (3) manage processes \n --- \n (4) quit\n\n");
+        printf(">> ");
 
-        char command;
-        command = getchar();
+        int command;
+        scanf("%d", &command);
         
-        if(command == 's'){
+        if(command == 1){
 
             show_procs(sinfo, 20);
 
-        } else if (command == 'a'){
+        } else if (command == 2){
 
             show_procs(sinfo, 0);
 
-        } else if (command == 'm'){
+        } else if (command == 3){
 
             manage_procs(sinfo);
 
-        } else if (command == 'q') {
+        } else if (command == 4) {
 
             quitting();
         }

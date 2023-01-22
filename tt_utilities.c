@@ -26,6 +26,20 @@ void readfile(const char* file_path,char* buf){
     fclose(fd);
 }
 
+
+int digits_counter(long unsigned int digit){
+
+    int n = digit;
+    int digits_count = 0;
+
+    do {
+        n /= 10;
+        ++digits_count;
+    } while ( n != 0);
+
+    return digits_count;
+
+}
 void get_sysinfo(sysinfo* s){
 
     float total_memory ;

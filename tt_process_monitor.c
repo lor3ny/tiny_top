@@ -19,9 +19,29 @@ float compute_mem_usage(long unsigned int rss, sysinfo* sinfo){
 }
 
 
-void sort_processes(process** procs){
+void sort_processes(process** procs, long unsigned int procs_count){
 
-    //bubblesort
+    process* back_proc;
+
+    int swapped;
+
+    do {
+
+        swapped = 0;
+        for(int i = 0; i<procs_count-1; i++){
+
+            if(procs[i]->cpu_usage < procs[i+1]->cpu_usage){
+
+                swapped = 1;
+                back_proc = procs[i];
+                procs[i] = procs[i+1];
+                procs[i+1] = back_proc;
+            }
+
+        }
+        
+    } while(swapped != 0);
+
     return;
 }
 
@@ -32,16 +52,27 @@ void build_processes_buffer(process** procs, int count){
 
 
     strcat(procs_buf, " _  _  _ .|_ _  _\n|||(_)| )||_(_)|");
-    strcat(procs_buf,"\n\n--- PID ----- STATE ---------- CPU USAGE ------ MEM USAGE ------ COMMAND\n\n");
+    strcat(procs_buf,"\n\n---- PID ----- STATE ---------- CPU USAGE ------- MEM USAGE ------ COMMAND\n\n");
 
     for(int i = 0; i<count; i++){
 
-        char p_buf[512];
-        sprintf(p_buf,"     %d          %c             %0.8f        %0.8f       %s\n", procs[i]->pid, procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+        char p_buf[24];
+
+        int digits_count = digits_counter(procs[i]->pid);
+
+        sprintf(p_buf,"    %d", procs[i]->pid);
+
+        for(int j = 0; j<(5-digits_count); j++){
+            strcat(p_buf, " ");
+        }
+
+        char p2_buf[512];
+        sprintf(p2_buf,"        %c              %0.8f        %0.8f       %s\n", procs[i]->state, procs[i]->cpu_usage, procs[i]->mem_usage, procs[i]->name);
+        strcat(p_buf, p2_buf);
         strcat(procs_buf, p_buf);
     }
 
-    strcat(procs_buf,"\n\n (q) quit\n (b) back\n (enter) update\n\n");
+    strcat(procs_buf,"\n\n (0) update\n (1) manage procs\n ---\n (2) back\n\n");
 
     printf("%s", procs_buf);
 
@@ -168,7 +199,8 @@ int process_monitor(sysinfo* sinfo, int mode){
         }
     } 
 
-    sort_processes(procs);
+    sort_processes(procs, sizeof(procs)/sizeof(process));
+
     if(mode == 0){
         mode = sizeof(procs)/sizeof(process);
     }
