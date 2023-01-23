@@ -4,7 +4,7 @@
 
 void show_procs(int mode){
 
-    char procs_buf[64000];
+    char procs_buf[256000];
 
     int res;
 
