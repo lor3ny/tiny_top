@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 #include <signal.h>
 
 typedef struct {
@@ -28,6 +29,7 @@ typedef struct{
 void quitting();
 void readfile(const char* file_path,char* buf);
 int digits_counter(long unsigned int digit);
+void ClearInputBuffer();
 
 float compute_cpu_usage(long unsigned int stime, long unsigned int utime, long unsigned int starttime);
 float compute_mem_usage(long unsigned int rss);

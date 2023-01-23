@@ -1,5 +1,12 @@
 #include "tt_lib.h"
 
+void ClearInputBuffer() 
+{
+	char c = 0;
+	// Loop over input buffer and consume chars until buffer is empty
+	while ((c = getchar()) != '\n' && c != EOF);
+}
+
 
 void quitting(){
     system("clear");
