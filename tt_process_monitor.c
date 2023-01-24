@@ -66,9 +66,8 @@ void sort_processes(process** procs, long unsigned int procs_count){
 }
 
 
-void build_processes_buffer(process** procs, int count, char* proc_buf){
+void build_processes_buffer(process** procs, int count, char* procs_buf){
 
-    char procs_buf[256000];
     strncpy(procs_buf,"",256000);
 
     strcat(procs_buf, "   ___  ___            _ _\n   |  \\/  |           (_) |\n   | .  . | ___  _ __  _| |_ ___  _ __\n   | |\\/| |/ _ \\| '_ \\| | __/ _ \\| '__|\n   | |  | | (_) | | | | | || (_) | |\n   \\_|  |_/\\___/|_| |_|_|\\__\\___/|_|");
