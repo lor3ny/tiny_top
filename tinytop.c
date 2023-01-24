@@ -17,7 +17,7 @@ void show_procs(int mode){
 
         int command;
         res = scanf("%d", &command);
-        //ClearInputBuffer();
+        ClearInputBuffer();
         if(res == 0 || command < 0 || command > 2){
             printf("Not permitted input\n");
             continue;
@@ -47,7 +47,7 @@ void manage_procs(){
 
             printf(">> ");
             res = scanf("%d", &action);
-            //ClearInputBuffer();
+            ClearInputBuffer();
             if(res == 0 || action < 1 || action > 5){
                 printf("Not permitted input\n");
                 continue;
@@ -60,7 +60,7 @@ void manage_procs(){
 
             printf("PID: ");
             scanf("%d", &pid);
-            //ClearInputBuffer();
+            ClearInputBuffer();
             if(res == 0){
                 printf("Not permitted input\n");
                 continue;

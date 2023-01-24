@@ -18,6 +18,10 @@ void quitting(){
 void readfile(const char* file_path,char* buf){
 
     FILE *fd = fopen(file_path, "r");
+    if(fd == NULL){
+        printf("%d", errno);
+        return;
+    }
 
     char c;
 
