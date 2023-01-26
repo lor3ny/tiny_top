@@ -131,7 +131,7 @@ void sort_processes(process** procs, long unsigned int procs_count){
 
 void build_processes_buffer(process** procs, int count, char* procs_buf){
 
-    strncpy(procs_buf,"",256000);
+    strncpy(procs_buf,"",64000);
 
     strcat(procs_buf, "   ___  ___            _ _\n   |  \\/  |           (_) |\n   | .  . | ___  _ __  _| |_ ___  _ __\n   | |\\/| |/ _ \\| '_ \\| | __/ _ \\| '__|\n   | |  | | (_) | | | | | || (_) | |\n   \\_|  |_/\\___/|_| |_|_|\\__\\___/|_|");
     strcat(procs_buf,"\n\n---- PID ----- STATE ---------- CPU USAGE(%) ------- MEM USAGE(%) ------ COMMAND\n\n");
@@ -303,7 +303,7 @@ int process_monitor(int mode, char* procs_buf){
 
 void show_procs(int mode){
 
-    char procs_buf[256000];
+    char procs_buf[64000];
 
     int res;
 
